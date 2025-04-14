@@ -669,6 +669,7 @@ Combobox.Filtering = Base => class extends Base {
 
   _initializeFiltering() {
     this._debouncedFilterAsync = debounce(this._debouncedFilterAsync.bind(this));
+    this._abortController = null;
   }
 
   _filter(inputType) {
@@ -682,6 +683,11 @@ Combobox.Filtering = Base => class extends Base {
   }
 
   _debouncedFilterAsync(inputType) {
+    if (this._abortController) {
+      this._abortController.abort();
+    }
+    
+    this._abortController = new AbortController();	  
     this._filterAsync(inputType);
   }
 
@@ -693,7 +699,17 @@ Combobox.Filtering = Base => class extends Base {
       callback_id: this._enqueueCallback()
     };
 
-    await get(this.asyncSrcValue, { responseKind: "turbo-stream", query });
+    try {
+      await get(this.asyncSrcValue, { 
+        responseKind: "turbo-stream", 
+        query,
+        signal: this._abortController.signal
+      });
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Filter error:', error);
+      }
+    }
   }
 
   _filterSync() {
