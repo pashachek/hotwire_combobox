@@ -668,7 +668,7 @@ Combobox.Filtering = Base => class extends Base {
   }
 
   _initializeFiltering() {
-    this._debouncedFilterAsync = debounce(this._debouncedFilterAsync.bind(this));
+    this._debouncedFilterAsync = debounce(this._debouncedFilterAsync.bind(this), 300); // safari async bug fix 
     this._abortController = null;
   }
 
